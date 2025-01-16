@@ -7,3 +7,9 @@
 [submodule "3rdparty/DBow3"]
 	path = 3rdparty/DBow3
 	url = https://github.com/rmsalinas/DBow3.git
+[submodule "3rdparty/g2o"]
+	path = 3rdparty/g2o
+	url = https://github.com/RainerKuemmerle/g2o.git
+[submodule "3rdparty/ceres-solver"]
+	path = 3rdparty/ceres-solver
+	url = https://github.com/ceres-solver/ceres-solver.git

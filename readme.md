@@ -24,7 +24,19 @@
 >> mkdir build && cd build
 >> cmake .. && make install
 
-# install BoW3
+# install g2o and dependencies  # ch6
+>> sudo apt install libsuitesparse-dev qtdeclarative5-dev qt5-qmake
+>> cd 3rdparty/g2o
+>> mkdir build && cd build
+>> cmake .. & make install
+
+# install ceres-solver
+>> cd 3rdparty/ceres-solver
+>> git submodule init && git submodule update
+>> mkdir build && cd build
+>> cmake .. & make install
+
+# install BoW3  # ch11
 >> cd 3rdparty/DBow3
 >> mkdir build && cd build
 >> cmake .. && make install # add #include <string> in DBoW.h if you get error of istream/ostream
