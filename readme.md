@@ -34,7 +34,7 @@
 >> cd 3rdparty/ceres-solver
 >> git submodule init && git submodule update
 >> mkdir build && cd build
->> cmake .. & make install
+>> cmake .. & make install 
 
 # install BoW3  # ch11
 >> cd 3rdparty/DBow3
