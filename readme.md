@@ -24,4 +24,9 @@
 >> mkdir build && cd build
 >> cmake .. && make install
 
+# install BoW3
+>> cd 3rdparty/DBow3
+>> mkdir build && cd build
+>> cmake .. && make install # add #include <string> in DBoW.h if you get error of istream/ostream
+
 ```
