@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <opencv2/opencv.hpp>
-#include <DBoW3.h>
+#include <DBoW3/DBoW3.h>
 
 int main(int argc, char **argv){
     // reading vocabulary from saved path

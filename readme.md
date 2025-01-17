@@ -31,8 +31,12 @@
 >> cmake .. & make install
 
 # install ceres-solver
+>> sudo apt-get install libgtest-dev
 >> cd 3rdparty/ceres-solver
 >> git submodule init && git submodule update
+>> cd 3rdparty/ceres-solver/abseil-cpp && cmake -B build && cd build && make -j8 install
+>> cd 3rdparty/ceres-solver/googletest && cmake -B build && cd build && make -j8 install
+>> cd 3rdparty/ceres-solver
 >> mkdir build && cd build
 >> cmake .. & make install 
 

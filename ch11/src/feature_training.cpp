@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 #include <opencv2/opencv.hpp>
-#include <DBoW3.h>
+#include <DBoW3/DBoW3.h>
 
 // Generate Vocabulary from list of images
 

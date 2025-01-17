@@ -9,7 +9,7 @@ set( CMAKE_CXX_FLAGS "-std=c++11 -O3" )
 find_package(OpenCV REQUIRED)
 
 # there's no FindDBoW3.cmake generate so set it manually
-set(DBoW3_INCLUDE_DIRS "/usr/local/include/DBoW3")
+set(DBoW3_INCLUDE_DIRS "/usr/local/include")
 set(DBoW3_LIBRARIES "/usr/local/lib/libDBoW3.so")
 
 include_directories(${DBoW3_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
