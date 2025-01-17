@@ -6,14 +6,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 find_package(OpenCV REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(g2o REQUIRED)
 find_package(Ceres REQUIRED)    # ${CERES_LIBRARIES} = Ceres::ceres
-include_directories("/usr/include/eigen3")
-message(warning ${G2O_INCLUDE_DIRS}) 
-message(warning ${G2O_CORE_LIBRARY}) 
-message(warning ${G2O_STUFF_LIBRARY}) 
 
-include_directories(${OpenCV_INCLUDE_DIRS} ${G2O_INCLUDE_DIRS})
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/../3rdparty/g2o/cmake_modules)
+find_package(G2O REQUIRED)      # this doesn't work out-of-the-box so need to add above line as FindG2O.cmake is there
+
+include_directories("/usr/include/eigen3")
+include_directories(${OpenCV_INCLUDE_DIRS} ${G2O_INCLUDE_DIR})
 add_executable(gaussNewton src/gaussNewton.cpp)
 target_link_libraries(gaussNewton ${OpenCV_LIBRARIES} Eigen3::Eigen)
 

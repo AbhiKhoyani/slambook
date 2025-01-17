@@ -24,8 +24,8 @@ class CurveFittingNode: public g2o::BaseVertex<3, Eigen::Vector3d>{
         }
 
         // dummy read/write function
-        virtual bool read(std::istream &in){}
-        virtual bool write(std::ostream &out) const{}
+        virtual bool read(std::istream &in){return true;}
+        virtual bool write(std::ostream &out) const{return true;}
 };
 
 // Edge: 1D Error term. Connected to single node only
@@ -52,8 +52,8 @@ class CurveFittingEdge: public g2o::BaseUnaryEdge<1, double, CurveFittingNode>{
             _jacobianOplusXi[2] = -y;
         }
 
-        virtual bool read(std::istream &in){}
-        virtual bool write(std::ostream &out) const {}
+        virtual bool read(std::istream &in){return true;}
+        virtual bool write(std::ostream &out) const {return true;}
         double _x;
 };
 
@@ -90,16 +90,17 @@ int main(int argc, char** argv){
 
     // add vertex -> single node
     CurveFittingNode *n = new CurveFittingNode();
-    n->setId(0);
     n->setEstimate(Eigen::Vector3d(ae, be, ce));
+    n->setId(0);
     optimizer.addVertex(n);
 
     // add edges based on datapoints
     for(int i=0; i<N; i++){
         CurveFittingEdge *edge = new CurveFittingEdge(x_data[i]);
         edge->setId(i);
+        edge->setVertex(0, n);
         edge->setMeasurement(y_data[i]);
-        edge->setInformation(Eigen::Matrix<double, 1, 1>::Identity()*1 / (w_sigma * w_sigma));  // information matrix
+        edge->setInformation(Eigen::Matrix<double, 1, 1>::Identity() * 1 / (w_sigma * w_sigma));  // information matrix
         optimizer.addEdge(edge);
     }
 
@@ -107,7 +108,7 @@ int main(int argc, char** argv){
     std::cout << "Opimization starts... "  << std::endl; 
     std::chrono::steady_clock::time_point start_time = std::chrono::steady_clock::now();
     optimizer.initializeOptimization();
-    optimizer.optimize(10);
+    optimizer.optimize(100);
     std::chrono::steady_clock::time_point end_time = std::chrono::steady_clock::now();
     std::chrono::duration<double> time_diff = end_time - start_time;
     std::cout << "Time taken: " << time_diff.count() << std::endl;
