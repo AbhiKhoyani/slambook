@@ -108,7 +108,7 @@ int main(int argc, char **argv){
     cv::Mat img2_plot = img2.clone();
     for (int i = 0; i < matches.size(); i++) {
         float depth1 = points[i].z;
-        std::cout << "depth: " << depth1 << std::endl;
+        // std::cout << "depth: " << depth1 << std::endl;
         cv::Point2d pt1_cam = pixel2cam(kps1[matches[i].queryIdx].pt, K);
         cv::circle(img1_plot, kps1[matches[i].queryIdx].pt, 2, get_color(depth1), 2);
 
