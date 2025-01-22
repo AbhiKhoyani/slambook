@@ -1,20 +1,23 @@
 #include <iostream>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Dense>
-#include <eigen3/Eigen/Geometry>
-#include <eigen3/Eigen/SVD>
-// #include <sophus/se3.hpp>
-// #include <g2o/core/base_vertex.h>
-// #include <g2o/core/base_unary_edge.h>
-// #include <g2o/core/sparse_optimizer.h>
-// #include <g2o/core/solver.h>
-// #include <g2o/core/block_solver.h>
-// #include <g2o/core/optimization_algorithm_gauss_newton.h>
-// #include <g2o/solvers/dense/linear_solver_dense.h>
 #include "get_orb.hpp"
+#include <Eigen/Core>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
+#include <Eigen/SVD>
+#include <sophus/se3.hpp>
+#include <g2o/core/base_vertex.h>
+#include <g2o/core/base_unary_edge.h>
+#include <g2o/core/sparse_optimizer.h>
+#include <g2o/core/solver.h>
+#include <g2o/core/block_solver.h>
+#include <g2o/core/optimization_algorithm_gauss_newton.h>
+#include <g2o/solvers/dense/linear_solver_dense.h>
 
-void pose_estiamtion_3d3d(const std::vector<cv::Point3f> &points1, const std::vector<cv::Point3f> &points2,
-                   cv::Mat &R, cv::Mat &t){
+
+// pose estimation from scratch using ICP algorithm
+void pose_estiamtion_3d3d(const std::vector<cv::Point3f> &points1,
+                     const std::vector<cv::Point3f> &points2,
+                     cv::Mat &R, cv::Mat &t){
     
     // calculate centers
     cv::Point3f p1(0,0,0), p2(0,0,0);
@@ -23,8 +26,10 @@ void pose_estiamtion_3d3d(const std::vector<cv::Point3f> &points1, const std::ve
         p1 += points1[i];
         p2 += points2[i];
     }
-    p1 /= N;
-    p2 /= N;
+    p1 = cv::Point3f(p1.x/N, p1.y/N, p1.z/N);
+    p2 = cv::Point3f(p2.x/N, p2.y/N, p2.z/N);
+    // p1 /= N;
+    // p2 /= N;
 
     // remove centers
     std::vector<cv::Point3f> q1, q2;
@@ -62,6 +67,101 @@ void pose_estiamtion_3d3d(const std::vector<cv::Point3f> &points1, const std::ve
                                , _R(2,0), _R(2,1), _R(2,2); 
     t = cv::Mat_<double>(3,1) << _t(0,0), _t(1,0), _t(2,0);
     return;
+}
+
+// ICP using Non-linear optimization using g2o. Vertex class will same as 3d2d exercise
+// wherease for Edge will update Unary edge based on 3d3d information
+
+class VertexPose:public g2o::BaseVertex<6, Sophus::SE3d>{
+    public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+        virtual void setToOriginImpl() override {
+            _estimate = Sophus::SE3d();
+        }
+
+        // implementing left multiplication of SE3d
+        virtual void oplusImpl(const double *update) override{
+            Eigen::Matrix<double, 6, 1> update_eigen;
+            update_eigen << update[0], update[1], 
+            update[2], update[3], update[4], update[5];
+
+            _estimate = Sophus::SE3d::exp(update_eigen) * _estimate;
+        }
+
+        virtual bool read(std::istream &in) override {return true;}
+        virtual bool write(std::ostream &out) const override {return true;}
+};
+
+class EdgeProjectXYZRGBPoseOnly: public g2o::BaseUnaryEdge<3, Eigen::Vector3d, VertexPose>{
+    public:
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
+
+        EdgeProjectXYZRGBPoseOnly(const Eigen::Vector3d &point): _point(point)  {}
+
+        virtual void computeError() override {
+            const VertexPose *pose = static_cast<const VertexPose *> (_vertices[0]);
+            _error = _measurement - pose->estimate()* _point;
+        }
+
+        virtual void linearizeOplus() override {
+            VertexPose *pose = static_cast<VertexPose *> (_vertices[0]);
+            Sophus::SE3d T = pose->estimate();
+            Eigen::Vector3d xyz_trans = T * _point;
+            _jacobianOplusXi.block<3, 3>(0, 0) = -Eigen::Matrix3d::Identity();
+            _jacobianOplusXi.block<3, 3>(0, 3) = Sophus::SO3d::hat(xyz_trans);
+        }
+
+        bool read(std::istream &in) {return true;}
+        bool write(std::ostream &out) const {return true;}
+
+    private:
+        Eigen::Vector3d _point;
+};
+
+void pose_estiamtion_3d3d_g2o(const std::vector<cv::Point3f> points1,
+                         const std::vector<cv::Point3f> points2,
+                         cv::Mat &R, cv::Mat &t){
+    
+    //  Initialize g2o solver, optimizer, block
+    typedef g2o::BlockSolverX BlockSolverType;
+    typedef g2o::LinearSolverDense<BlockSolverType::PoseMatrixType> LinearSolverType;
+
+    auto solver = new g2o::OptimizationAlgorithmGaussNewton(std::make_unique<BlockSolverType>(std::make_unique<LinearSolverType>()));
+
+    g2o::SparseOptimizer optimizer;
+    optimizer.setAlgorithm(solver);
+    optimizer.setVerbose(true);
+
+    // add vertex
+    VertexPose *vertex_pose = new VertexPose();
+    vertex_pose->setId(0);
+    vertex_pose->setEstimate(Sophus::SE3d());
+    optimizer.addVertex(vertex_pose);
+
+    // add edges:
+    for(size_t i=0; i<points1.size(); i++){
+    
+        EdgeProjectXYZRGBPoseOnly *edge = new EdgeProjectXYZRGBPoseOnly(Eigen::Vector3d(points2[i].x, points2[i].y, points2[i].z));
+        edge->setId(i);
+        edge->setVertex(0, vertex_pose);
+        edge->setMeasurement(Eigen::Vector3d(points1[i].x, points1[i].y, points1[i].z));
+        edge->setInformation(Eigen::Matrix3d::Identity());
+        optimizer.addEdge(edge);
+    }
+
+    optimizer.initializeOptimization();
+    optimizer.optimize(10);
+    Sophus::SE3d pose = vertex_pose->estimate();
+    Eigen::Matrix3d _R = pose.rotationMatrix();
+    Eigen::Vector3d _t = pose.translation();
+
+    R = (cv::Mat_<double>(3,3) << _R(0,0) , _R(0,1), _R(0,2),
+                                _R(1,0) , _R(1,1), _R(1,2),
+                                _R(2,0) , _R(2,1), _R(2,2));
+    t = (cv::Mat_<double>(3,1) << _t(0,0), _t(1,0), _t(2,0));                                
+
+    std::cout << "pose estimated by g2o =\n" << pose.matrix() << std::endl;
+
 }
 
 cv::Point2d pixel2cam(cv::Point2d p, cv::Mat K){
@@ -115,7 +215,16 @@ int main(int argc , char **argv){
     std::chrono::duration<double>  time_diff =  std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
     std::cout << "R: \n" << R << std::endl;
     std::cout << "t: \n" << t << std::endl;
-    std::cout << "Time take by ICP: " << time_diff.count() << std::endl;
+    std::cout << "Time taken by ICP: " << time_diff.count() << std::endl;
+
+    cv::Mat R_g2o, t_g2o;
+    t1 = std::chrono::steady_clock::now();
+    pose_estiamtion_3d3d_g2o(points1, points2, R_g2o, t_g2o);
+    t2 = std::chrono::steady_clock::now();
+    time_diff =  std::chrono::duration_cast<std::chrono::duration<double>>(t2-t1);
+    std::cout << "R: \n" << R_g2o << std::endl;
+    std::cout << "t: \n" << t_g2o << std::endl;
+    std::cout << "Time taken by G2O: " << time_diff.count() << std::endl;
 
     return 0;
 }

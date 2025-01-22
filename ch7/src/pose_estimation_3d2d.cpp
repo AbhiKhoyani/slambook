@@ -1,5 +1,5 @@
 #include <iostream>
-#include <eigen3/Eigen/Core>
+#include <Eigen/Core>
 #include <sophus/se3.hpp>
 #include <g2o/core/base_vertex.h>
 #include <g2o/core/base_unary_edge.h>
