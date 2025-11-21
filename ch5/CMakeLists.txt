@@ -15,4 +15,5 @@ add_executable(joinMap src/joinMap.cpp)
 target_link_libraries(joinMap ${Pangolin_LIBRARIES} Sophus::Sophus ${OpenCV_LIBRARIES})
 
 
-# Run it as WAYLAND_DISPLAY=0 ./build/examples/plotTrajectory
+# Fow WSl2: Run it as WAYLAND_DISPLAY=0 ./build/examples/plotTrajectory
+# For docker: run `xhost +local:docker` from host terminal
