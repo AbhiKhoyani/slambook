@@ -1,10 +1,9 @@
 cmake_minimum_required(VERSION 2.8)
 project(chapter11)
 
-set(CMAKE_BUILD_TYPE "Release" )
-set(CMAKE_CXX_FLAGS "-std=c++11 -O3" )
-# set(CMAKE_CXX_STANDARD 17)
-# set(CMAKE_CXX_STANDARD_REQUIRED True)
+# Need to use c++11 because of DBOW
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 find_package(OpenCV REQUIRED)
 
