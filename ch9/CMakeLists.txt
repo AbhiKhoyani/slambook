@@ -18,4 +18,4 @@ add_executable(bundle_adjustment_ceres src/ba_ceres.cpp)
 target_link_libraries(bundle_adjustment_ceres ${CERES_LIBRARIES} bal_common Eigen3::Eigen)
 
 add_executable(bundle_adjustment_g2o src/ba_g2o.cpp)
-target_link_libraries(bundle_adjustment_g2o Eigen3::Eigen Sophus::Sophus bal_common ${G2O_CORE_LIBRARY} ${G2O_STUFF_LIBRARY} ${G2O_SOLVER_CSPARSE})
+target_link_libraries(bundle_adjustment_g2o Eigen3::Eigen Sophus::Sophus fmt bal_common ${G2O_CORE_LIBRARY} ${G2O_STUFF_LIBRARY} ${G2O_LIB_TYPE} ${G2O_SOLVER_CSPARSE})
