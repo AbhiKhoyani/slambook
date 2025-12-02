@@ -45,4 +45,7 @@
 >> mkdir build && cd build
 >> cmake .. && make install # add #include <string> in DBoW.h if you get error of istream/ostream
 
+# install pcl and octomap for ch12
+>> sudo apt-get install libpcl-dev pcl-tools liboctomap-dev octovis
+
 ```
